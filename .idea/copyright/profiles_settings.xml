@@ -1,0 +1,8 @@
+<component name="CopyrightManager">
+  <settings default="WSC2025">
+    <module2copyright>
+      <element module="Project Files" copyright="WSC2025" />
+    </module2copyright>
+    <LanguageOptions name="JAVA" />
+  </settings>
+</component>

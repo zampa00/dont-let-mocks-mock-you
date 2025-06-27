@@ -1,0 +1,191 @@
+openapi: 3.0.0
+info:
+  title: RPG Combat API
+  description: API for managing adventurers, encounters, and combat in an RPG game
+  version: 1.0.0
+servers:
+  - url: http://localhost:7000
+    description: Local development server
+paths:
+  /create/{name}/{weapon}:
+    post:
+      summary: Create a new adventurer
+      description: Creates a new adventurer with the specified name and weapon
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: The name of the adventurer
+          schema:
+            type: string
+        - name: weapon
+          in: path
+          required: true
+          description: The weapon used by the adventurer, currently accept axe, daggers, fists and sword
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Adventurer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Adventurer'
+              example:
+                id: "123e4567-e89b-12d3-a456-426614174000"
+                name: "Aragorn"
+                weapon: "Sword"
+                hp: 100
+                attack: 15
+                defense: 10
+                money: 50
+                numberOfPotions: 3
+  /start-encounter/{adventurerId}:
+    post:
+      summary: Start a new encounter
+      description: Starts a new encounter for the specified adventurer
+      parameters:
+        - name: adventurerId
+          in: path
+          required: true
+          description: The UUID of the adventurer
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Encounter started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Encounter'
+              example:
+                id: "123e4567-e89b-12d3-a456-426614174001"
+                adventurerId: "123e4567-e89b-12d3-a456-426614174000"
+                monster:
+                  name: "Goblin"
+                  hp: 50
+                  attack: 10
+                  defense: 5
+  /attack/{adventurerId}:
+    post:
+      summary: Perform an attack
+      description: The adventurer attacks the monster in the current encounter
+      parameters:
+        - name: adventurerId
+          in: path
+          required: true
+          description: The UUID of the adventurer
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Attack performed successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              example:
+                - "Aragorn attacks Goblin for 8 damage"
+                - "Goblin has 42 HP remaining"
+                - "Goblin attacks Aragorn for 5 damage"
+                - "Aragorn has 95 HP remaining"
+  /heal/{adventurerId}:
+    post:
+      summary: Heal the adventurer
+      description: The adventurer uses a healing potion to restore health points during an encounter
+      parameters:
+        - name: adventurerId
+          in: path
+          required: true
+          description: The UUID of the adventurer
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Healing performed successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              example:
+                - "Aragorn uses a healing potion and restores 25 HP"
+                - "Aragorn now has 95 HP"
+                - "Goblin attacks Aragorn for 5 damage"
+                - "Aragorn has 90 HP remaining"
+        '400':
+          description: Bad request - adventurer or encounter not found, or no potions available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "Adventurer not found"
+components:
+  schemas:
+    Adventurer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the adventurer
+        name:
+          type: string
+          description: Name of the adventurer
+        weapon:
+          type: string
+          description: Weapon used by the adventurer
+        hp:
+          type: integer
+          description: Health points of the adventurer
+        attack:
+          type: integer
+          description: Attack power of the adventurer
+        defense:
+          type: integer
+          description: Defense power of the adventurer
+        money:
+          type: integer
+          description: Amount of money the adventurer has
+        numberOfPotions:
+          type: integer
+          description: Number of healing potions the adventurer has
+    Monster:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the monster
+        hp:
+          type: integer
+          description: Health points of the monster
+        attack:
+          type: integer
+          description: Attack power of the monster
+        defense:
+          type: integer
+          description: Defense power of the monster
+    Encounter:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the encounter
+        adventurerId:
+          type: string
+          format: uuid
+          description: Identifier of the adventurer in this encounter
+        monster:
+          $ref: '#/components/schemas/Monster'
+          description: The monster in this encounter
