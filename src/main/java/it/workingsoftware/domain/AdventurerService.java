@@ -6,6 +6,9 @@
 
 package it.workingsoftware.domain;
 
+import it.workingsoftware.domain.exception.IllegalPotionUsageException;
+import it.workingsoftware.domain.exception.NoPotionsException;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -80,10 +83,13 @@ public class AdventurerService {
         Encounter encounter = encounterRepository.findByAdventurerId(adventurer.id())
             .orElseThrow(() -> new IllegalArgumentException("Encounter not found"));
 
-        AttackResult attackResult = combatService.heal(adventurer, encounter);
-
-        adventurerRepository.update(attackResult.updatedAdventurer());
-        return attackResult.actions();
+        try {
+            AttackResult attackResult = combatService.heal(adventurer, encounter);
+            adventurerRepository.update(attackResult.updatedAdventurer());
+            return attackResult.actions();
+        } catch (NoPotionsException | IllegalPotionUsageException e) {
+            throw e;
+        }
     }
 
     private Monster spawnMonster() {

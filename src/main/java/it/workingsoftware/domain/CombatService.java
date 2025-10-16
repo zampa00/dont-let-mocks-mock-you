@@ -6,6 +6,10 @@
 
 package it.workingsoftware.domain;
 
+import it.workingsoftware.domain.exception.IllegalPotionUsageException;
+import it.workingsoftware.domain.exception.NoPotionsException;
+import it.workingsoftware.domain.exception.PotionLimitUsageReachedException;
+
 import java.util.ArrayList;
 import java.util.List;
 

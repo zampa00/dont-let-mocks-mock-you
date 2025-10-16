@@ -1,0 +1,42 @@
+### Variables
+@baseUrl = http://localhost:7000
+@adventurerName = Aragorn
+@weapon = sword
+
+### 1. Create Adventurer (use this first)
+POST {{baseUrl}}/create/{{adventurerName}}/{{weapon}}
+
+> {%
+    client.global.set("adventurerId", response.body.id);
+%}
+
+### 2. Start Encounter (use this second)
+POST {{baseUrl}}/start-encounter/{{adventurerId}}
+
+### 3. Attack
+POST {{baseUrl}}/attack/{{adventurerId}}
+
+> {%
+    // Clear ID if adventurer dies
+    if (response.status === 200) {
+        const messages = response.body;
+        const isDead = messages.some(msg => msg.includes("is dead!"));
+        if (isDead) {
+            client.global.set("adventurerId", "");
+        }
+    }
+%}
+
+### 4. Heal
+POST {{baseUrl}}/heal/{{adventurerId}}
+
+> {%
+    // Clear ID if adventurer dies after healing
+    if (response.status === 200) {
+        const messages = response.body;
+        const isDead = messages.some(msg => msg.includes("is dead!"));
+        if (isDead) {
+            client.global.set("adventurerId", "");
+        }
+    }
+%}

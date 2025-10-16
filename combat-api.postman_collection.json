@@ -1,0 +1,237 @@
+{
+  "info": {
+    "name": "RPG Combat API Workshop",
+    "description": "Collection for Java Mocking Workshop - Auto-manages adventurer lifecycle",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:7000",
+      "type": "string"
+    },
+    {
+      "key": "adventurerId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adventurerName",
+      "value": "Aragorn",
+      "type": "string"
+    },
+    {
+      "key": "weapon",
+      "value": "sword",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Create Adventurer",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/create/{{adventurerName}}/{{weapon}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["create", "{{adventurerName}}", "{{weapon}}"]
+        },
+        "description": "Creates a new adventurer and stores the ID for subsequent calls"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const response = pm.response.json();",
+              "    pm.collectionVariables.set('adventurerId', response.id);",
+              "    console.log('✅ Adventurer created: ' + response.name + ' (ID: ' + response.id + ')');",
+              "    pm.test('Adventurer created and ID stored', function () {",
+              "        pm.expect(response.id).to.not.be.empty;",
+              "    });",
+              "} else {",
+              "    console.log('❌ Failed to create adventurer');",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Start Encounter",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/start-encounter/{{adventurerId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["start-encounter", "{{adventurerId}}"]
+        },
+        "description": "Starts a new encounter for the adventurer"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const response = pm.response.json();",
+              "    console.log('🐉 Encounter started with: ' + response.monster.name);",
+              "    pm.test('Encounter started successfully', function () {",
+              "        pm.expect(response.monster).to.not.be.undefined;",
+              "    });",
+              "} else {",
+              "    console.log('❌ Failed to start encounter - check if adventurer exists');",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Attack Monster",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/attack/{{adventurerId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["attack", "{{adventurerId}}"]
+        },
+        "description": "Attack the monster in the current encounter"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const messages = pm.response.json();",
+              "    ",
+              "    // Log all combat messages",
+              "    messages.forEach(function(msg) {",
+              "        console.log('⚔️  ' + msg);",
+              "    });",
+              "    ",
+              "    // Check if adventurer died",
+              "    const deathMessage = messages.find(function(msg) {",
+              "        return msg.includes('is dead!');",
+              "    });",
+              "    ",
+              "    if (deathMessage) {",
+              "        pm.collectionVariables.set('adventurerId', '');",
+              "        console.log('💀 ADVENTURER DIED! ID cleared. Create a new adventurer to continue.');",
+              "        pm.test('Adventurer died - ID cleared', function () {",
+              "            pm.expect(pm.collectionVariables.get('adventurerId')).to.equal('');",
+              "        });",
+              "    } else {",
+              "        pm.test('Combat continues', function () {",
+              "            pm.expect(messages.length).to.be.greaterThan(0);",
+              "        });",
+              "    }",
+              "} else {",
+              "    console.log('❌ Attack failed - check if adventurer and encounter exist');",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Heal Adventurer",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/heal/{{adventurerId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["heal", "{{adventurerId}}"]
+        },
+        "description": "Use a healing potion to restore health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const messages = pm.response.json();",
+              "    ",
+              "    // Log all healing messages",
+              "    messages.forEach(function(msg) {",
+              "        console.log('💚 ' + msg);",
+              "    });",
+              "    ",
+              "    // Check if adventurer died after healing (monster counter-attack)",
+              "    const deathMessage = messages.find(function(msg) {",
+              "        return msg.includes('is dead!');",
+              "    });",
+              "    ",
+              "    if (deathMessage) {",
+              "        pm.collectionVariables.set('adventurerId', '');",
+              "        console.log('💀 ADVENTURER DIED AFTER HEALING! ID cleared.');",
+              "        pm.test('Adventurer died after healing - ID cleared', function () {",
+              "            pm.expect(pm.collectionVariables.get('adventurerId')).to.equal('');",
+              "        });",
+              "    } else {",
+              "        pm.test('Healing successful', function () {",
+              "            pm.expect(messages.length).to.be.greaterThan(0);",
+              "        });",
+              "    }",
+              "} else if (pm.response.code === 400) {",
+              "    const error = pm.response.json();",
+              "    console.log('❌ ' + error.error);",
+              "    pm.test('Healing failed: ' + error.error, function () {",
+              "        pm.expect(pm.response.code).to.equal(400);",
+              "    });",
+              "} else {",
+              "    console.log('❌ Heal failed - check if adventurer exists and has potions');",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Check Current Status (Debug)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/nonexistent",
+          "host": ["{{baseUrl}}"],
+          "path": ["nonexistent"]
+        },
+        "description": "Debug endpoint to check current adventurer ID"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const currentId = pm.collectionVariables.get('adventurerId');",
+              "if (currentId && currentId !== '') {",
+              "    console.log('🔍 Current adventurer ID: ' + currentId);",
+              "    pm.test('Adventurer ID exists: ' + currentId, function () {",
+              "        pm.expect(currentId).to.not.be.empty;",
+              "    });",
+              "} else {",
+              "    console.log('🔍 No active adventurer - create one first!');",
+              "    pm.test('No active adventurer - create one first!', function () {",
+              "        pm.expect(currentId).to.be.oneOf(['', undefined, null]);",
+              "    });",
+              "}"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
